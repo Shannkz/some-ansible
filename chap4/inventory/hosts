@@ -1,4 +1,0 @@
-[sshubuntu]
-sshubuntu1 ansible_port=2022
-sshubuntu2 ansible_port=2023
-sshubuntu3 ansible_port=2024
