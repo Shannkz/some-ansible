@@ -1,0 +1,18 @@
+---
+- name: "replace value in json"
+  hosts: localhost
+  connection: local
+  tasks:
+
+    - name: pwd
+      become: no
+      shell: "pwd"
+
+    - name: task1
+      become: no
+      replace:
+        path: "a.env.json"
+        regexp: '^  "BOOTSTRAP_SERVERS".*$'
+        replace: "  \"BOOTSTRAP_SERVERS\": \"{{bootstrap_servers}}\""
+        # backup: yes
+      tags: ['always']

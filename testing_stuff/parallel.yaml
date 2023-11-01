@@ -1,0 +1,33 @@
+---
+- name: "replace value in json"
+  hosts: sshubuntu
+  tasks:
+
+    - name: Create bash script
+      blockinfile:
+        path: "/home/dman/execute.sh"
+        state: present
+        create: yes
+        block: |
+          sleep "{{ sleep_time }}"
+
+    - name: Trigger long running job
+      become: no
+      shell: "bash /home/dman/execute.sh"
+      args:
+        executable: /bin/bash
+      async: 15
+      poll: 3
+      ignore_errors: true
+      # register: sleeper
+
+    # - name: Check on an async task
+    #   async_status:
+    #     jid: "{{ sleeper.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   retries: 100
+    #   delay: 3
+
+    - name: Another job
+      shell: sleep 2

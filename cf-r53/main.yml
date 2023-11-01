@@ -1,0 +1,56 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    cloudfront_id: E1BASYPBJFY36Y
+    new_domain_name: test-alb-xa-elb2-433161508.eu-central-1.elb.amazonaws.com
+    origin_name_check: elb-alb-test-xa-761247316.eu-central-1.elb.amazonaws.com
+  tasks:
+
+    - name: Fetch CloudFront Distribution
+      community.aws.cloudfront_distribution_info:
+        distribution: true
+        distribution_id: "{{ cloudfront_id }}"
+      register: cf_info
+
+    - set_fact:
+        etag: "{{ cf_info['cloudfront'][cloudfront_id]['ETag'] }}"
+        domain_name: "{{ cf_info['cloudfront'][cloudfront_id]['Distribution']['DistributionConfig']['Origins']['Items'][0]['DomainName'] }}"
+        origin_id: "{{ cf_info['cloudfront'][cloudfront_id]['Distribution']['DistributionConfig']['Origins']['Items'][0]['Id'] }}"
+        origin_id2: "{{ cf_info['cloudfront'][cloudfront_id]['Distribution']['DistributionConfig']['Origins']['Items'][1]['Id'] }}"
+
+    - name: Inform message
+      debug:
+        msg: "{{ cloudfront_id }}'s domain name {{ domain_name }} is going to be changed to {{ new_domain_name }}"
+      when: domain_name == "{{ origin_name_check }}"
+
+    - name: Write JSON file with origin config
+      copy:
+        content: "{{ cf_info['cloudfront'][cloudfront_id]['Distribution']['DistributionConfig'] }}"
+        dest: test.json
+
+    - name: Update to new Origin domain in the config file
+      command: "sed -i '' 's/{{ origin_name_check }}/{{ new_domain_name }}/g' test.json"
+
+    - name: Use the config file to update CloudFront origins
+      command: "aws cloudfront update-distribution --id {{ cloudfront_id }} --distribution-config 'file://test.json' --if-match {{ etag }}"
+    - name: B
+      debug:
+        msg:
+          - "{{ etag }}"
+          - "{{ domain_name }}"
+          - "{{ origin_id }}"
+          - "{{ origin_id2 }}"
+          # - "{{ cf_info }}"
+
+    # - name: Update CloudFront ALB Origin domain
+    #   community.aws.cloudfront_distribution:
+    #     state: present
+    #     distribution_id: "{{ cloudfront_id }}"
+    #     origins:
+    #       # - id: "{{ new_domain_name }}"
+    #         # domain_name: "{{ new_domain_name }}"
+          
+    #       - id: CFS3Origin
+    #       #   domain_name: allevents-react-app-code-dev.s3.eu-central-1.amazonaws.com
+    #     purge_origins: true

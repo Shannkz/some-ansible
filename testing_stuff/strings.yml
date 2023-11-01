@@ -1,0 +1,9 @@
+---
+- name: "replace value in json"
+  hosts: localhost
+  connection: local
+  tasks:
+
+    - name: replace commas
+      become: no
+      shell: echo {{ss | replace(',', ' or ')}}

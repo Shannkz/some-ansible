@@ -1,0 +1,5 @@
+[sshubuntu]
+sshubuntu1 ansible_port=2022 sleep_time=3
+sshubuntu2 ansible_port=2023 sleep_time=6
+sshubuntu3 ansible_port=2024 sleep_time=9
+sshubuntu4 ansible_port=2025 sleep_time=9

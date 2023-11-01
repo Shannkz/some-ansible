@@ -1,0 +1,78 @@
+---
+# - name: Play with it
+#   hosts: localhost
+#   tasks:
+
+#   - name: Get information about a distribution using the CNAME of the cloudfront distribution.
+#     community.aws.cloudfront_distribution_info:
+#       profile: events
+#       distribution: true
+#       domain_name_alias: www.all-events.ro
+#     register: result_website
+#   - debug:
+#       msg: "{{ result_website['cloudfront']['www.all-events.ro']['Distribution'] }}"
+
+- name: retrieve host entries
+  hosts: localhost
+  tasks:
+    - name: grab zone id
+      amazon.aws.route53_zone:
+        zone: "all-events.ro"
+      register: AWSINFO
+
+    - name: grab Route53 record information
+      amazon.aws.route53_info:
+        type: A
+        query: record_sets
+        hosted_zone_id: "{{ AWSINFO.zone_id }}"
+        start_record_name: "all-events.ro"
+      register: RECORDS
+    - debug:
+        # result.zone_id and result.name for Hosted Zone id and name
+        msg: 
+          - "Zone ID: {{AWSINFO.result.zone_id}} & Zone Name: {{AWSINFO.result.name}}"
+          # - "{{ RECORDS }}"
+          - "{{ RECORDS.ResourceRecordSets | selectattr('Type', 'equalto', 'A') | selectattr('alias_target_id', 'equalto', 'E3G6QXGX743I9Y') }}"
+    # - name: Save current Route 53 A records to a file
+    #   copy:
+    #     content: "{{ AWSINFO.result }}"
+    #     dest: current_hosted_zone.json
+    #   set-fact:
+    #       main_zone_name: "{{ AWSINFO.result.name}}"
+    #       main_zone_id: " {{ AWSINFO.result.zone_id }}"
+
+    # - name: Fetch Route 53 A records
+    #   route53_info:
+    #     hosted_zone_id: "{{ AWSINFO.result.zone_id }}"
+    #     query: record_sets
+    #     type: A
+    #     start_record_name: "all-events.ro"
+    #     resource_id: "arn:aws:cloudfront::671686518123:distribution/E2U2DP8T2PSO9X"
+    #   register: route53_records
+
+    # - name: Test r53
+    #   route53:
+    #     state: get
+    #     # hosted_zone_id: "{{ AWSINFO.result.zone_id }}"
+    #     alias_hosted_zone_id: "{{ AWSINFO.result.zone_id }}"
+    #     zone: "{{ AWSINFO.result.name }}"
+    #     record: "all-events.ro"
+    #     type: A
+    #     alias: true
+    #   register: route53_records
+    
+    # - debug:
+    #     msg: "{{ route53_records }}"
+
+    # - name: Get information about a distribution using the CNAME of the cloudfront distribution.
+    #   community.aws.cloudfront_distribution_info:
+    #     profile: events
+    #     distribution: true
+    #     domain_name_alias: all-events.ro
+    #   register: result_website
+
+    # - name: Debug CloudFront
+    #   debug:
+    #     msg: 
+    #     - "{{ result_website['cloudfront']['www.all-events.ro']['Distribution']['AliasICPRecordals'] }}"
+    #     - "{{ result_website['cloudfront']['www.all-events.ro']['Distribution']['DistributionConfig']['Aliases'] }}"

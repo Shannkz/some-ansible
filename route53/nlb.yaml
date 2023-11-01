@@ -1,0 +1,48 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+
+  # - name: Determine env
+  #   set_fact:
+  #     purpose: "{{ tags_Purpose | lower }}"
+  #     bluegreen: "{{ tags_BlueGreen | lower }}"
+
+    - name: Get the R53 Hosted Zone
+      amazon.aws.route53_zone:
+          zone: "all-events.ro"
+      register: AWSINFO
+
+    - debug:
+        msg: "{{AWSINFO.zone_id}}"
+
+    - name: Gather NLB facts
+      command: aws elbv2 describe-load-balancers --names test-nlb
+      register: nlb_info
+
+    # Fetch the current record value
+    - name: Fetch R53
+      route53:
+        state: get
+        hosted_zone_id: "{{ AWSINFO.zone_id }}"
+        zone: "all-events.ro"
+        record: "nlb.all-events.ro"
+        type: CNAME
+      register: rec
+    
+    - debug:
+        msg: "{{ rec }}"
+
+    # 
+    - name: Update Route53 Value
+      route53:
+        state: present
+        zone: "all-events.ro"
+        record: nlb.all-events.ro
+        type: CNAME
+        ttl: 300
+        value: "google.com"
+        overwrite: true
+    
+    # - debug:
+    #     msg: "{{ nlb_info[LoadBalancers] }}"

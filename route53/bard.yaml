@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+  tasks:
+    # - name: Get the list of Route 53 alias records
+    #   aws_route53_record:
+    #     state: present
+    #   register: route53_records
+
+    # - name: Filter the list of alias records to only include those that are attached to the CloudFront distribution
+    #   set_fact:
+    #     cloudfront_alias_records: "{{ route53_records.results | selectattr('type', 'equalto', 'A') | selectattr('alias_target_id', 'equalto', 'E3G6QXGX743I9Y') }}"
+
+    # - name: Return the list of filtered alias records
+    #   debug:
+    #     var: cloudfront_alias_records
+
+    - name: Get information about a distribution using the CNAME of the cloudfront distribution.
+      community.aws.cloudfront_distribution_info:
+        distribution: true
+        domain_name_alias: www.all-events.ro
+      register: result_website
+
+    - debug:
+        msg: "{{ result_website['cloudfront']['www.all-events.ro']['Distribution'] }}"
+
+    - name: List the first 20 resource record sets in a given hosted zone
+      route53_info:
+        query: record_sets
+        hosted_zone_id: Z04704433FU6KCWW872T7
+        max_items: 20
+      register: record_sets
+    
+    - name: Show record sets
+      debug:
+        msg:
+        #  - "{{record_sets}}"
+        #  - "{{ record_sets.resource_record_sets | selectattr('type', 'equalto', 'A') }}" d2pyli9izaf1nb.cloudfront.net
+         - "{{ record_sets.resource_record_sets | selectattr('type', 'equalto', 'A') | selectattr('alias_target.dns_name', 'contains', 'cloudfront')}}"
